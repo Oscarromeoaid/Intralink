@@ -12,6 +12,7 @@
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=Nunito" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <!-- Scripts -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
@@ -20,10 +21,11 @@
     <div id="app">
 <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
     <div class="container">
-        <a class="navbar-brand" href="{{ route('home') }}">
-            IntraLink
-        </a>
-
+<a class="navbar-brand d-flex align-items-center gap-3" href="{{ route('home') }}">
+    <img src="{{ asset('images/intralink-logo.png') }}"
+         alt="IntraLink Logo"
+         height="60">
+</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarSupportedContent">
             <span class="navbar-toggler-icon"></span>
@@ -31,14 +33,7 @@
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
 
-            <!-- Left Side -->
-            @auth
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('home') }}">Home</a>
-                </li>
-            </ul>
-            @endauth
+           
 
             <!-- Right Side -->
             <ul class="navbar-nav ms-auto">

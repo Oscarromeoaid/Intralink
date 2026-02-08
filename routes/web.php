@@ -27,5 +27,15 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts/{post}/like', [LikeController::class, 'toggle'])->name('posts.like');
 Route::post('/posts/{post}/comments', [CommentController::class, 'store'])->name('posts.comments.store');
 Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
+ Route::post('/posts/{post}/comments', [CommentController::class, 'store'])
+         ->name('posts.comments.store');
+    
+    // Supprimer un commentaire
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])
+         ->name('comments.destroy');
+    
+    // Likes sur les commentaires
+    Route::post('/comments/{comment}/like', [CommentController::class, 'like'])
+         ->name('comments.like');
 
 });

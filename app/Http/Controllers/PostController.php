@@ -14,19 +14,30 @@ class PostController extends Controller
     }
 
     public function index()
-    {
-$posts = \App\Models\Post::with(['user', 'likes', 'comments.user'])
+{
+    $posts = \App\Models\Post::with(['user', 'likes', 'comments' => function($query) {
+        $query->whereNull('parent_id')
+              ->with(['user', 'replies' => function($query) {
+                  $query->with('user');
+              }])
+              ->orderBy('created_at', 'desc');
+    }])
     ->latest()
     ->paginate(10);
 
-return view('home', compact('posts'));
-
-
-    }
+    return view('home', compact('posts'));
+}
     public function show(Post $post)
 {
-    $post->load(['user','likes','comments.user']);
-
+    // Charger les commentaires avec leurs réponses et likes
+    $post->load(['user', 'likes', 'comments' => function($query) {
+        $query->whereNull('parent_id')
+              ->with(['user', 'replies' => function($query) {
+                  $query->with('user');
+              }, 'likes'])
+              ->orderBy('created_at', 'desc');
+    }]);
+    
     return view('posts.show', compact('post'));
 }
 

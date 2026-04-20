@@ -60,4 +60,19 @@ class CommentController extends Controller
         
         return back()->with('success', $message);
     }
+  public function report(Comment $comment)
+{
+    // Vérifier que l'utilisateur n'est pas admin/modo
+    if (in_array(auth()->user()->role, ['admin', 'moderator'])) {
+        return back()->with('error', 'Les modérateurs peuvent directement supprimer les commentaires.');
+    }
+    
+    // Marquer directement comme signalé avec un timestamp valide
+    $comment->update([
+        'reported' => true,
+        'reported_at' => now(), // Carbon instance
+    ]);
+    
+    return back()->with('success', 'Commentaire signalé. Un modérateur va l\'examiner.');
+}
 }

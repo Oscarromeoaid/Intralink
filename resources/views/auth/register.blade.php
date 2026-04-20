@@ -1,202 +1,127 @@
 @extends('layouts.app')
 
+@section('hide_nav', true)
+@section('body_class', 'auth-page')
+@section('main_class', 'p-0')
+
 @section('content')
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<div class="il-auth-shell">
+    <section class="il-auth-showcase">
+        <div class="il-auth-stage">
+            <div>
+                <a href="{{ url('/') }}" class="il-auth-logo mb-5">
+                    <img src="{{ asset('images/intralink-logo.png') }}" alt="IntraLink">
+                    <span>
+                        <strong class="d-block fs-4">IntraLink</strong>
+                        <span class="text-white-50">Connecter les equipes avec style</span>
+                    </span>
+                </a>
 
-<style>
-    :root {
-        --bg-dark: #050505;
-        --accent: #0071e3;
-        --glass: rgba(255, 255, 255, 0.02);
-    }
-
-    body, html {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        background-color: var(--bg-dark);
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        overflow: hidden;
-    }
-
-    .split-screen {
-        display: flex;
-        flex-direction: row;
-        height: 100vh;
-        width: 100%;
-    }
-
-    /* Partie Gauche - Visuelle */
-    .left-side {
-        flex: 1.2;
-        background: linear-gradient(135deg, rgba(0, 113, 227, 0.2) 0%, rgba(134, 34, 255, 0.1) 100%), 
-                    url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80');
-        background-size: cover;
-        background-position: center;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        padding: 80px;
-        position: relative;
-    }
-
-    .left-side::after {
-        content: "";
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: radial-gradient(circle at center, transparent, var(--bg-dark));
-    }
-
-    .left-content {
-        position: relative;
-        z-index: 2;
-    }
-
-    .left-content h1 {
-        font-size: 4rem;
-        font-weight: 800;
-        letter-spacing: -2px;
-        line-height: 1;
-        margin-bottom: 20px;
-        background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-    /* Partie Droite - Formulaire */
-    .right-side {
-        flex: 1;
-        background: var(--bg-dark);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 40px;
-        border-left: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .register-box {
-        width: 100%;
-        max-width: 450px;
-    }
-
-    .input-group-custom {
-        margin-bottom: 20px;
-    }
-
-    .input-group-custom label {
-        display: block;
-        color: #86868b;
-        font-size: 0.9rem;
-        margin-bottom: 8px;
-        font-weight: 500;
-    }
-
-    .input-field {
-        width: 100%;
-        background: #121212;
-        border: 1px solid #333;
-        border-radius: 12px;
-        padding: 16px;
-        color: white;
-        transition: 0.3s;
-        font-size: 1rem;
-    }
-
-    .input-field:focus {
-        border-color: var(--accent);
-        background: #1a1a1a;
-        outline: none;
-        box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
-    }
-
-    .password-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-        margin-bottom: 20px;
-    }
-
-    .btn-register {
-        width: 100%;
-        padding: 16px;
-        background: white;
-        color: black;
-        border: none;
-        border-radius: 12px;
-        font-weight: 700;
-        font-size: 1rem;
-        margin-top: 20px;
-        transition: 0.3s;
-    }
-
-    .btn-register:hover {
-        background: #e0e0e0;
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(255,255,255,0.2);
-    }
-
-    /* Responsive */
-    @media (max-width: 992px) {
-        .left-side { display: none; }
-        .right-side { flex: 1; padding: 30px; }
-        .password-row { grid-template-columns: 1fr; gap: 20px; }
-    }
-</style>
-
-<div class="split-screen">
-    <div class="left-side">
-        <div class="left-content">
-            <div class="mb-5">
-                <span style="font-size: 2rem; font-weight: 800; color: #fff;">Intra<span style="color: var(--accent);">Link.</span></span>
+                <span class="il-kicker text-white-50">Bienvenue</span>
+                <h1 class="il-heading mt-3">Installez une presence claire dans le reseau interne.</h1>
+                <p class="il-lead mt-4 text-white-50">
+                    Creez votre compte, completez votre profil et partagez vos informations dans un espace plus premium et plus lisible.
+                </p>
             </div>
-            <h1>Rejoignez <br>le réseau <br>interne.</h1>
-            <p style="color: #86868b; font-size: 1.2rem; max-width: 400px;">
-                Créez votre profil collaborateur et connectez-vous instantanément à vos équipes, projets et collègues.
-            </p>
-        </div>
-    </div>
 
-    <div class="right-side">
-        <div class="register-box">
-            <h2 class="fw-bold mb-4" style="font-size: 2rem; color: white;">Inscription</h2>
-            <p class="text-secondary mb-4" style="font-size: 1.05rem;">Créez votre compte en 30 secondes</p>
-            
+            <div class="il-auth-points">
+                <div class="il-auth-point">
+                    <strong>Profil valorise</strong>
+                    <span class="text-white-50">Mettez en avant votre role, votre departement et vos infos utiles.</span>
+                </div>
+                <div class="il-auth-point">
+                    <strong>Publication rapide</strong>
+                    <span class="text-white-50">Diffusez une information ou une actualite en quelques secondes.</span>
+                </div>
+                <div class="il-auth-point">
+                    <strong>Conversation contextualisee</strong>
+                    <span class="text-white-50">Reponses, likes et detail de post restent organises.</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="il-auth-form-wrap">
+        <div class="il-auth-form">
+            <span class="il-kicker">Inscription</span>
+            <h2 class="mt-3 mb-2 fw-bold">Creer votre compte</h2>
+            <p class="il-text-muted mb-4">Entrez vos informations de base pour rejoindre le reseau.</p>
+
             <form method="POST" action="{{ route('register') }}">
                 @csrf
-                
-                <div class="input-group-custom">
-                    <label>Nom complet</label>
-                    <input type="text" name="name" class="input-field @error('name') is-invalid @enderror" value="{{ old('name') }}" required autofocus placeholder="Ex: Marie Dupont">
-                    @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
+
+                <div class="mb-3">
+                    <label for="name" class="form-label">Nom complet</label>
+                    <input
+                        id="name"
+                        type="text"
+                        name="name"
+                        class="form-control @error('name') is-invalid @enderror"
+                        value="{{ old('name') }}"
+                        required
+                        autofocus
+                        placeholder="Marie Dupont"
+                    >
+                    @error('name')
+                        <span class="invalid-feedback d-block">{{ $message }}</span>
+                    @enderror
                 </div>
 
-                <div class="input-group-custom">
-                    <label>Email professionnel</label>
-                    <input type="email" name="email" class="input-field @error('email') is-invalid @enderror" value="{{ old('email') }}" required placeholder="marie.dupont@entreprise.com">
-                    @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email professionnel</label>
+                    <input
+                        id="email"
+                        type="email"
+                        name="email"
+                        class="form-control @error('email') is-invalid @enderror"
+                        value="{{ old('email') }}"
+                        required
+                        placeholder="marie.dupont@entreprise.com"
+                    >
+                    @error('email')
+                        <span class="invalid-feedback d-block">{{ $message }}</span>
+                    @enderror
                 </div>
 
-                <div class="password-row">
-                    <div class="input-group-custom">
-                        <label>Mot de passe</label>
-                        <input type="password" name="password" class="input-field @error('password') is-invalid @enderror" required placeholder="••••••••">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="password" class="form-label">Mot de passe</label>
+                        <input
+                            id="password"
+                            type="password"
+                            name="password"
+                            class="form-control @error('password') is-invalid @enderror"
+                            required
+                            placeholder="Minimum 8 caracteres"
+                        >
                     </div>
-                    <div class="input-group-custom">
-                        <label>Confirmation</label>
-                        <input type="password" name="password_confirmation" class="input-field" required placeholder="••••••••">
+                    <div class="col-md-6">
+                        <label for="password-confirm" class="form-label">Confirmation</label>
+                        <input
+                            id="password-confirm"
+                            type="password"
+                            name="password_confirmation"
+                            class="form-control"
+                            required
+                            placeholder="Repetez le mot de passe"
+                        >
                     </div>
                 </div>
-                @error('password') <span class="text-danger small">{{ $message }}</span> @enderror
 
-                <button type="submit" class="btn-register">Créer mon compte</button>
+                @error('password')
+                    <span class="invalid-feedback d-block mt-2">{{ $message }}</span>
+                @enderror
 
-                <p class="text-center mt-4 text-secondary small">
-                    Déjà un compte ? <a href="{{ route('login') }}" class="text-white text-decoration-none fw-bold">Se connecter</a>
-                </p>
+                <button type="submit" class="btn il-btn-primary w-100 py-3 mt-4">Creer mon compte</button>
             </form>
+
+            <div class="mt-4 pt-3 border-top">
+                <p class="mb-0 il-text-muted">
+                    Vous avez deja un compte ?
+                    <a href="{{ route('login') }}" class="il-comment-link">Se connecter</a>
+                </p>
+            </div>
         </div>
-    </div>
+    </section>
 </div>
 @endsection

@@ -19,6 +19,13 @@
         <div class="alert alert-danger border-0 shadow-sm mb-4">{{ session('error') }}</div>
     @endif
 
+    @if(request('q'))
+        <div class="alert alert-info border-0 shadow-sm mb-4">
+            <i class="fas fa-search me-2"></i> Résultats pour : <strong>{{ request('q') }}</strong>
+            <a href="{{ route('home') }}" class="float-end text-decoration-none">Effacer <i class="fas fa-times ms-1"></i></a>
+        </div>
+    @endif
+
     <div class="il-feed-layout">
         <section class="il-grid">
             <div class="il-hero">
@@ -86,7 +93,7 @@
                     $isLiked = $post->likes->contains('user_id', $currentUser->id);
                 @endphp
 
-                <article class="card il-post-card">
+                <article class="card il-post-card" data-post-id="{{ $post->id }}">
                     <!-- En-tête du post -->
                     <div class="il-post-header">
                         <div class="il-post-author">
@@ -131,12 +138,11 @@
                         </div>
 
                         <div class="il-action-row">
-                            <form method="POST" action="{{ route('posts.like', $post) }}">
-                                @csrf
-                                <button type="submit" class="il-action-pill {{ $isLiked ? 'liked' : '' }}">
-                                    {{ $isLiked ? 'Aimé' : 'J\'aime' }}
-                                </button>
-                            </form>
+                            <button type="button" class="like-btn il-action-pill {{ $isLiked ? 'liked' : '' }}" data-post-id="{{ $post->id }}">
+                                <i class="{{ $isLiked ? 'fa-solid fa-heart text-danger' : 'fa-regular fa-heart' }}"></i>
+                                <span class="like-count">{{ $post->likes->count() }}</span>
+                                J'aime
+                            </button>
                             <a href="{{ route('posts.show', $post) }}" class="il-action-pill">
                                 Voir le detail
                             </a>
@@ -144,8 +150,9 @@
                     </div>
 
                     <!-- Formulaire de commentaire -->
-                    <form method="POST" action="{{ route('posts.comments.store', $post) }}" class="il-comment-form mt-4">
+                    <form method="POST" action="{{ route('comments.store') }}" class="il-comment-form mt-4">
                         @csrf
+                        <input type="hidden" name="post_id" value="{{ $post->id }}">
                         @if($currentUser->avatar_path)
                             <img src="{{ asset('storage/'.$currentUser->avatar_path) }}" alt="{{ $currentUser->name }}" class="il-avatar-sm">
                         @else
@@ -182,12 +189,23 @@
 
                                         <!-- Actions du commentaire -->
                                         <div class="il-comment-actions mt-2">
-                                            <button type="button" class="btn btn-link p-0 il-comment-link" data-reply-toggle="{{ $comment->id }}">
+                                            <button type="button" class="reply-btn btn btn-link p-0 il-comment-link" data-comment-id="{{ $comment->id }}">
                                                 <i class="fas fa-reply"></i> Répondre
                                             </button>
-                                            
+
+                                            <!-- Bouton Supprimer (visible pour le propriétaire) -->
+                                            @if($comment->user_id === $currentUser->id)
+                                                <form method="POST" action="{{ route('comments.destroy', $comment) }}" class="d-inline ms-3">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-link p-0 il-comment-link text-danger" onclick="return confirm('Supprimer ce commentaire ?')">
+                                                        <i class="fas fa-trash"></i> Supprimer
+                                                    </button>
+                                                </form>
+                                            @endif
+
                                             <!-- Bouton Signaler (visible pour les users normaux) -->
-                                            @if($currentUser->role === 'user')
+                                            @if($currentUser->role === 'user' && $comment->user_id !== $currentUser->id)
                                                 <form method="POST" action="{{ route('comments.report', $comment) }}" class="d-inline ms-3">
                                                     @csrf
                                                     <button type="submit" class="btn btn-link p-0 il-comment-link text-danger" onclick="return confirm('Signaler ce commentaire comme inapproprié ?')">
@@ -195,34 +213,35 @@
                                                     </button>
                                                 </form>
                                             @endif
-                                            
-                                            <!-- Bouton Supprimer (visible pour admin/modo) -->
+
+                                            <!-- Bouton Supprimer pour admin/modo -->
                                             @can('moderator')
-                                                <form method="POST" action="{{ route('comments.destroy', $comment) }}" class="d-inline ms-3">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-link p-0 il-comment-link text-danger" onclick="return confirm('Supprimer ce commentaire définitivement ?')">
-                                                        <i class="fas fa-trash"></i> Supprimer
-                                                    </button>
-                                                </form>
+                                                @if($comment->user_id !== $currentUser->id)
+                                                    <form method="POST" action="{{ route('comments.destroy', $comment) }}" class="d-inline ms-3">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-link p-0 il-comment-link text-danger" onclick="return confirm('Supprimer ce commentaire définitivement ?')">
+                                                            <i class="fas fa-trash"></i> Supprimer
+                                                        </button>
+                                                    </form>
+                                                @endif
                                             @endcan
-                                            
+
                                             @if($comment->replies->count() > 0)
                                                 <span class="il-meta ms-3">{{ $comment->replies->count() }} réponse{{ $comment->replies->count() > 1 ? 's' : '' }}</span>
                                             @endif
                                         </div>
 
-                                        <!-- Formulaire de réponse -->
-                                        <div class="mt-3 d-none" data-reply-form="{{ $comment->id }}">
-                                            <form method="POST" action="{{ route('posts.comments.store', $post) }}" class="il-inline-form">
-                                                @csrf
-                                                <input type="hidden" name="parent_id" value="{{ $comment->id }}">
-                                                <div class="d-flex gap-2">
-                                                    <input type="text" name="content" class="form-control form-control-sm" placeholder="Votre réponse..." required>
-                                                    <button type="submit" class="btn il-btn-primary btn-sm px-3">Répondre</button>
-                                                </div>
-                                            </form>
-                                        </div>
+                                       <!-- Formulaire de réponse -->
+<div class="reply-form" data-reply-form="{{ $comment->id }}" style="display: none;">
+    <form method="POST" action="{{ route('comments.store') }}" class="il-inline-form d-flex gap-2">
+        @csrf
+        <input type="hidden" name="post_id" value="{{ $post->id }}">
+        <input type="hidden" name="parent_id" value="{{ $comment->id }}">
+        <input type="text" name="content" class="form-control form-control-sm flex-grow-1" placeholder="Écrire une réponse..." required>
+        <button type="submit" class="btn il-btn-primary btn-sm px-3">→</button>
+    </form>
+</div>
 
                                         <!-- Liste des réponses -->
                                         @if($comment->replies->count() > 0)
@@ -248,10 +267,20 @@
                                                                 <span class="il-meta">{{ $reply->created_at->diffForHumans() }}</span>
                                                             </div>
                                                             <div class="mt-2" style="white-space: pre-wrap;">{{ $reply->content }}</div>
-                                                            
+
                                                             <!-- Actions pour les réponses -->
                                                             <div class="il-comment-actions mt-2">
-                                                                @if($currentUser->role === 'user')
+                                                                @if($reply->user_id === $currentUser->id)
+                                                                    <form method="POST" action="{{ route('comments.destroy', $reply) }}" class="d-inline">
+                                                                        @csrf
+                                                                        @method('DELETE')
+                                                                        <button type="submit" class="btn btn-link p-0 il-comment-link text-danger" onclick="return confirm('Supprimer cette réponse ?')">
+                                                                            <i class="fas fa-trash"></i> Supprimer
+                                                                        </button>
+                                                                    </form>
+                                                                @endif
+
+                                                                @if($currentUser->role === 'user' && $reply->user_id !== $currentUser->id)
                                                                     <form method="POST" action="{{ route('comments.report', $reply) }}" class="d-inline">
                                                                         @csrf
                                                                         <button type="submit" class="btn btn-link p-0 il-comment-link text-danger" onclick="return confirm('Signaler ce commentaire comme inapproprié ?')">
@@ -259,15 +288,17 @@
                                                                         </button>
                                                                     </form>
                                                                 @endif
-                                                                
+
                                                                 @can('moderator')
-                                                                    <form method="POST" action="{{ route('comments.destroy', $reply) }}" class="d-inline ms-3">
-                                                                        @csrf
-                                                                        @method('DELETE')
-                                                                        <button type="submit" class="btn btn-link p-0 il-comment-link text-danger" onclick="return confirm('Supprimer ce commentaire ?')">
-                                                                            <i class="fas fa-trash"></i> Supprimer
-                                                                        </button>
-                                                                    </form>
+                                                                    @if($reply->user_id !== $currentUser->id)
+                                                                        <form method="POST" action="{{ route('comments.destroy', $reply) }}" class="d-inline ms-3">
+                                                                            @csrf
+                                                                            @method('DELETE')
+                                                                            <button type="submit" class="btn btn-link p-0 il-comment-link text-danger" onclick="return confirm('Supprimer ce commentaire ?')">
+                                                                                <i class="fas fa-trash"></i> Supprimer
+                                                                            </button>
+                                                                        </form>
+                                                                    @endif
                                                                 @endcan
                                                             </div>
                                                         </div>
@@ -351,32 +382,124 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Gestion des réponses aux commentaires
-    const toggles = document.querySelectorAll('[data-reply-toggle]');
+    // Attendre que tout le DOM soit chargé
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM chargé - initialisation des reply buttons');
 
-    toggles.forEach((toggle) => {
-        toggle.addEventListener('click', function () {
-            const targetId = this.dataset.replyToggle;
+        // Fonction pour initialiser les boutons
+        function initReplyButtons() {
+            const replyButtons = document.querySelectorAll('.reply-btn');
+            console.log('Boutons reply trouvés:', replyButtons.length);
 
-            document.querySelectorAll('[data-reply-form]').forEach((form) => {
-                if (form.dataset.replyForm === targetId) {
-                    form.classList.toggle('d-none');
+            replyButtons.forEach(button => {
+                // Supprimer les anciens événements pour éviter les doublons
+                button.removeEventListener('click', handleReplyClick);
+                // Ajouter le nouvel événement
+                button.addEventListener('click', handleReplyClick);
+            });
+        }
+
+        // Fonction handler pour le clic sur reply
+        function handleReplyClick(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const commentId = this.dataset.commentId;
+            console.log('Clic sur reply, commentId:', commentId);
+
+            const replyForm = document.querySelector(`.reply-form[data-reply-form="${commentId}"]`);
+            console.log('Formulaire trouvé:', replyForm);
+
+            if (replyForm) {
+                // Fermer tous les autres formulaires
+                document.querySelectorAll('.reply-form').forEach(form => {
+                    if (form !== replyForm) {
+                        form.style.display = 'none';
+                    }
+                });
+
+                // Ouvrir/fermer celui-ci
+                if (replyForm.style.display === 'none' || replyForm.style.display === '') {
+                    replyForm.style.display = 'block';
+                    console.log('Formulaire AFFICHÉ');
                 } else {
-                    form.classList.add('d-none');
+                    replyForm.style.display = 'none';
+                    console.log('Formulaire CACHÉ');
+                }
+            } else {
+                console.error('Formulaire non trouvé pour ID:', commentId);
+            }
+        }
+
+        // Initialiser
+        initReplyButtons();
+
+        // Observer les changements DOM (pour les posts chargés dynamiquement)
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.addedNodes.length > 0) {
+                    initReplyButtons();
+                }
+            });
+        });
+
+        observer.observe(document.querySelector('.il-comment-list'), { childList: true, subtree: true });
+
+        // Fermer les formulaires en cliquant ailleurs
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.reply-btn') && !event.target.closest('.reply-form')) {
+                document.querySelectorAll('.reply-form').forEach(form => {
+                    form.style.display = 'none';
+                });
+            }
+        });
+    });
+</script>
+
+<script>
+    // Gestion des likes
+    document.addEventListener('DOMContentLoaded', function() {
+        const likeButtons = document.querySelectorAll('.like-btn');
+
+        likeButtons.forEach(btn => {
+            btn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const postId = this.dataset.postId;
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+                try {
+                    const response = await fetch(`/posts/${postId}/like`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    const countSpan = this.querySelector('.like-count');
+                    if (countSpan) {
+                        countSpan.textContent = data.count;
+                    }
+
+                    const icon = this.querySelector('i');
+                    if (data.liked) {
+                        this.classList.add('liked');
+                        icon.classList.remove('fa-regular');
+                        icon.classList.add('fa-solid', 'text-danger');
+                    } else {
+                        this.classList.remove('liked');
+                        icon.classList.remove('fa-solid', 'text-danger');
+                        icon.classList.add('fa-regular');
+                    }
+                } catch (error) {
+                    console.error('Erreur:', error);
                 }
             });
         });
     });
-
-    // Fermer les formulaires de réponse en cliquant ailleurs
-    document.addEventListener('click', function (event) {
-        if (!event.target.closest('[data-reply-toggle]') && !event.target.closest('[data-reply-form]')) {
-            document.querySelectorAll('[data-reply-form]').forEach((form) => {
-                form.classList.add('d-none');
-            });
-        }
-    });
-});
 </script>
 @endpush

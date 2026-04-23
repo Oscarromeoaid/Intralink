@@ -13,43 +13,42 @@ class CommentController extends Controller
         $this->middleware('auth');
     }
 
-    // Store a new comment or a reply
-    public function store(Request $request, Post $post)
+    public function store(Request $request)
     {
-        $validated = $request->validate([
-            'content' => ['required', 'string', 'max:1000'],
-            'parent_id' => ['nullable', 'exists:comments,id'],
+        $request->validate([
+            'content' => 'required|string|max:1000',
+            'post_id' => 'required|exists:posts,id'
         ]);
 
-        $comment = new Comment();
-        $comment->user_id = $request->user()->id;
-        $comment->post_id = $post->id;
-        $comment->content = $validated['content'];
-        
-        // Si c'est une réponse à un commentaire
-        if (isset($validated['parent_id'])) {
-            $comment->parent_id = $validated['parent_id'];
-        }
-        
-        $comment->save();
+        $user = auth()->user();
 
-        return back()->with('success', 'Commentaire ajouté !');
+        $comment = Comment::create([
+            'content' => $request->content,
+            'user_id' => $user->id,
+            'post_id' => $request->post_id,
+            'parent_id' => $request->parent_id,
+        ]);
+
+        return back()->with('success', 'Commentaire ajouté');
     }
-    
-    // Supprimer un commentaire
+
     public function destroy(Comment $comment)
     {
-        $this->authorize('delete', $comment);
-        $comment->delete();
-        
-        return back()->with('success', 'Commentaire supprimé !');
+        $user = auth()->user();
+
+        if ($comment->user_id === $user->id || $user->role === 'admin' || $user->role === 'moderator') {
+            $comment->replies()->delete();
+            $comment->delete();
+            return back()->with('success', 'Commentaire supprimé');
+        }
+
+        return back()->with('error', 'Vous n\'êtes pas autorisé à supprimer ce commentaire');
     }
-    
-    // Like/unlike a comment
+
     public function like(Request $request, Comment $comment)
     {
         $user = $request->user();
-        
+
         if ($comment->likes()->where('user_id', $user->id)->exists()) {
             $comment->likes()->detach($user->id);
             $message = 'Like retiré';
@@ -57,22 +56,21 @@ class CommentController extends Controller
             $comment->likes()->attach($user->id);
             $message = 'Commentaire aimé';
         }
-        
+
         return back()->with('success', $message);
     }
-  public function report(Comment $comment)
-{
-    // Vérifier que l'utilisateur n'est pas admin/modo
-    if (in_array(auth()->user()->role, ['admin', 'moderator'])) {
-        return back()->with('error', 'Les modérateurs peuvent directement supprimer les commentaires.');
+
+    public function report(Comment $comment)
+    {
+        if (in_array(auth()->user()->role, ['admin', 'moderator'])) {
+            return back()->with('error', 'Les modérateurs peuvent directement supprimer les commentaires.');
+        }
+
+        $comment->update([
+            'reported' => true,
+            'reported_at' => now(),
+        ]);
+
+        return back()->with('success', 'Commentaire signalé. Un modérateur va l\'examiner.');
     }
-    
-    // Marquer directement comme signalé avec un timestamp valide
-    $comment->update([
-        'reported' => true,
-        'reported_at' => now(), // Carbon instance
-    ]);
-    
-    return back()->with('success', 'Commentaire signalé. Un modérateur va l\'examiner.');
-}
 }

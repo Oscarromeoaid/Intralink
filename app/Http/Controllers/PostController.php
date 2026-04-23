@@ -27,6 +27,24 @@ class PostController extends Controller
 
     return view('home', compact('posts'));
 }
+public function search(Request $request)
+{
+    $query = $request->get('q');
+
+    $posts = Post::with(['user', 'likes', 'comments' => function($q) {
+        $q->whereNull('parent_id')->with(['user', 'replies' => function($q) {
+            $q->with('user');
+        }])->orderBy('created_at', 'desc');
+    }])
+    ->where('content', 'LIKE', "%{$query}%")
+    ->orWhereHas('user', function($q) use ($query) {
+        $q->where('name', 'LIKE', "%{$query}%");
+    })
+    ->latest()
+    ->paginate(10);
+
+    return view('home', compact('posts'))->with('searchQuery', $query);
+}
     public function show(Post $post)
 {
     // Charger les commentaires avec leurs réponses et likes
@@ -37,7 +55,7 @@ class PostController extends Controller
               }, 'likes'])
               ->orderBy('created_at', 'desc');
     }]);
-    
+
     return view('posts.show', compact('post'));
 }
 

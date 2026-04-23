@@ -44,5 +44,13 @@ public function likedComments()
 {
     return $this->belongsToMany(Comment::class, 'comment_likes')
                 ->withTimestamps();
+}public function notifications()
+{
+    return $this->hasMany(Notification::class)->latest();
+}
+
+public function unreadNotifications()
+{
+    return $this->hasMany(Notification::class)->where('read', false);
 }
 }
